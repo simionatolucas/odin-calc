@@ -1,5 +1,6 @@
 const numbers = document.querySelectorAll(".number");
 const operations = document.querySelectorAll(".operation");
+const point = document.querySelector(".point");
 
 const AC = document.querySelector("#AC");
 const backspace = document.querySelector("#backspace");
@@ -12,36 +13,79 @@ let currentOperation = "";
 let firstOperand = 0;
 let secondOperand = 0;
 let result = 0;
+let shouldReset = false;
+let pointAdded = false;
 
 numbers.forEach(function(number) {
     number.addEventListener('click', () => {
+        if (shouldReset) {
+            clear();
+            shouldReset = false;
+        }
+
         if (displayCurrent.textContent.toString().length < 11) {
-            displayCurrent.textContent += parseInt(number.textContent);
+            displayCurrent.textContent += number.textContent;
         }
     });
 });
 
 operations.forEach(function(operation) {
     operation.addEventListener("click", () => {
+        if (displayCurrent.textContent == "") {
+            return;
+        }
+
+        if (displayPrevious.textContent && shouldReset == false) {
+            secondOperand = parseFloat(displayCurrent.textContent);
+            result = Math.round(operate(currentOperation, firstOperand, secondOperand) * 100) / 100;
+            displayCurrent.textContent = result;
+        }
+   
         currentOperation = operation.textContent;
-        firstOperand = parseInt(displayCurrent.textContent);
+        firstOperand = parseFloat(displayCurrent.textContent);
         displayPrevious.textContent = `${firstOperand} ${currentOperation}`
         displayCurrent.textContent = "";
+        shouldReset = false;
+        pointAdded = false;
     });
 })
 
-equals.addEventListener("click", () => {
-    secondOperand = parseInt(displayCurrent.textContent);
-    displayPrevious.textContent = `${firstOperand} ${currentOperation} ${secondOperand}`
-    result = operate(currentOperation, firstOperand, secondOperand);
-    console.log(result);
-    displayCurrent.textContent = result;
+point.addEventListener("click", () => {
+    if (pointAdded) {
+        return;
+    }
+
+    displayCurrent.textContent += ".";
+    pointAdded = true;
 });
 
-AC.addEventListener("click", () => {
-    displayCurrent.textContent = "";
-    displayPrevious.textContent = "";
-    result = 0;
+equals.addEventListener("click", () => {
+    if (!displayCurrent.textContent) {
+        return;
+    }
+
+    secondOperand = parseFloat(displayCurrent.textContent);
+    displayPrevious.textContent = `${firstOperand} ${currentOperation} ${secondOperand}`
+    result = Math.round(operate(currentOperation, firstOperand, secondOperand) * 100) / 100;
+
+    if (result.toString().length > 11) {
+        displayCurrent.textContent = result.toExponential(2);
+    } else {
+        displayCurrent.textContent = result;
+    }
+    
+    shouldReset = true;
+});
+
+AC.addEventListener("click", clear);
+
+backspace.addEventListener("click", () => {
+    if (shouldReset == true) {
+        clear();
+    }
+
+    prev = displayCurrent.textContent;
+    displayCurrent.textContent = prev.slice(0, -1);
 });
 
 function add(a, b) {
@@ -73,41 +117,20 @@ function operate(op, a, b) {
     }
 }
 
-// const divideBtn = document.querySelector("#divide");
-// divideBtn.addEventListener("click", () => {
-//     a = parseInt(display.textContent);
-//     display.textContent = "";
-// });
+function clear() {
+    firstOperand = 0;
+    secondOperand = 0;
+    result = 0;
+    shouldReset = false;
+    pointAdded = false;
+    displayCurrent.textContent = "";
+    displayPrevious.textContent = "";
+    currentOperation.textContent = "";
+}
 
-// const multiplyBtn = document.querySelector("#multiply");
-// multiplyBtn.addEventListener("click", () => {
-//     a = parseInt(display.textContent);
-//     display.textContent = "";
-// });
-
-// const subtractBtn = document.querySelector("#subtract");
-// subtractBtn.addEventListener("click", () => {
-//     a = parseInt(display.textContent);
-//     display.textContent = "";
-// });
-
-// const sumBtn = document.querySelector("#sum");
-// sumBtn.addEventListener("click", () => {
-//     a = parseInt(display.textContent);
-//     display.textContent = "";
-// });
-
-// const equalsBtn = document.querySelector("#equals");
-// equalsBtn.addEventListener("click", () => {
-//     b = parseInt(display.textContent);
-//     display.textContent = "";
-//     display.textContent = operate(operation, a, b);
-// });
-
-
-
-
-
-
-// al momento de calcular podemos obtener lo que está escrito en el display y convertirlo a int / float
-// los numeros en el display deberían ser un array? para poder hacer push y pop
+// TODO
+// * Limitar tamaño del resultado (usar notación científica?)
+// ----------- No deberían poder colocarse múltiples puntos
+// ----------- Backspace
+// ----------- Operaciones encadenadas no funcionan sin antes apretar el =
+// ----------- La operación previa se borra al apretar un número luego de apretar el =
