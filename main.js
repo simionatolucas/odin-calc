@@ -51,6 +51,11 @@ operations.forEach(function(operation) {
 })
 
 point.addEventListener("click", () => {
+    if (shouldReset) {
+        clear();
+        shouldReset = false;
+    }
+    
     if (pointAdded) {
         return;
     }
@@ -127,10 +132,3 @@ function clear() {
     displayPrevious.textContent = "";
     currentOperation.textContent = "";
 }
-
-// TODO
-// * Limitar tamaño del resultado (usar notación científica?)
-// ----------- No deberían poder colocarse múltiples puntos
-// ----------- Backspace
-// ----------- Operaciones encadenadas no funcionan sin antes apretar el =
-// ----------- La operación previa se borra al apretar un número luego de apretar el =
